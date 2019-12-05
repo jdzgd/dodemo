@@ -19,17 +19,22 @@ import java.util.Properties;
 import static java.util.stream.Collectors.toList;
 
 /**
+ * properties 转换为excel
+ * <p>
+ * 若sheet名称超过31个字符，则只支持单个文件夹10个文件以内
+ *
  * @author jiangdongzhao
  * @version V1.0.0
  * @date 2019/10/17
  */
-public class EasyExcelTest {
+public class PropertiesToExcel {
 
     public static void main(String[] args) throws IOException {
         Properties properties = new Properties();
         //文件夹
-        String dir="superior";
-        String dir2="C:\\Users\\user\\Desktop\\";
+        String dir = "task";
+        //路径
+        String dir2 = "C:\\Users\\user\\Desktop\\";
 
         List<Path> fileNames = Files.list(Paths.get(dir2 + dir)).collect(toList());
         String xlsxName = Paths.get(dir2 + dir + ".xlsx").toString();
@@ -37,7 +42,8 @@ public class EasyExcelTest {
 
         List<List<IndexData>> allData = new ArrayList<>();
         //读取文件夹内文件
-        for (Path x : fileNames) {
+        for (int i = 0; i < fileNames.size(); i++) {
+            Path x = fileNames.get(i);
             List<IndexData> data = new ArrayList<>();
             properties.clear();
             try {
@@ -47,24 +53,29 @@ public class EasyExcelTest {
                     IndexData indexData = new IndexData();
                     indexData.setKey(key);
                     indexData.setValue(properties.getProperty(key));
-                    indexData.setSheet(x.getFileName().toString().split(".properties")[0]);
+                    String sheetName = x.getFileName().toString().split(".properties")[0];
+                    //sheetName超过31附带序号，防止被截取后一致
+                    if (sheetName.length() >= 31) {
+                        sheetName = sheetName.substring(0, 29) + "-" + i;
+                    }
+                    indexData.setSheet(sheetName);
                     data.add(indexData);
                 }
                 allData.add(data);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
 
         ExcelWriter excelWriter;
-        // 这里 指定文件
+        // excel + 多个sheet
         excelWriter = EasyExcel.write(xlsxName, IndexData.class).build();
         for (int i = 0; i < allData.size(); i++) {
-            // 这里注意 如果同一个sheet只要创建一次
-            WriteSheet writeSheet;
-            writeSheet = EasyExcel.writerSheet(i, allData.get(i).get(0).getSheet()).build();
-            excelWriter.write(allData.get(i), writeSheet);
+            if (!allData.get(i).isEmpty()) {
+                WriteSheet writeSheet;
+                writeSheet = EasyExcel.writerSheet(i, allData.get(i).get(0).getSheet()).build();
+                excelWriter.write(allData.get(i), writeSheet);
+            }
         }
         excelWriter.finish();
     }
