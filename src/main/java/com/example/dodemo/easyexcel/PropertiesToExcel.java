@@ -32,7 +32,7 @@ public class PropertiesToExcel {
     public static void main(String[] args) throws IOException {
         Properties properties = new Properties();
         //文件夹
-        String dir = "task";
+        String dir = "user";
         //路径
         String dir2 = "C:\\Users\\user\\Desktop\\";
 
@@ -46,25 +46,21 @@ public class PropertiesToExcel {
             Path x = fileNames.get(i);
             List<IndexData> data = new ArrayList<>();
             properties.clear();
-            try {
-                FileInputStream input = new FileInputStream(new File(x.toString()));
-                properties.load(new InputStreamReader(input, StandardCharsets.UTF_8));
-                for (String key : properties.stringPropertyNames()) {
-                    IndexData indexData = new IndexData();
-                    indexData.setKey(key);
-                    indexData.setValue(properties.getProperty(key));
-                    String sheetName = x.getFileName().toString().split(".properties")[0];
-                    //sheetName超过31附带序号，防止被截取后一致
-                    if (sheetName.length() >= 31) {
-                        sheetName = sheetName.substring(0, 29) + "-" + i;
-                    }
-                    indexData.setSheet(sheetName);
-                    data.add(indexData);
+            FileInputStream input = new FileInputStream(new File(x.toString()));
+            properties.load(new InputStreamReader(input, StandardCharsets.UTF_8));
+            for (String key : properties.stringPropertyNames()) {
+                IndexData indexData = new IndexData();
+                indexData.setKey(key);
+                indexData.setValue(properties.getProperty(key));
+                String sheetName = x.getFileName().toString().split(".properties")[0];
+                //sheetName超过31附带序号，防止被截取后一致
+                if (sheetName.length() >= 31) {
+                    sheetName = sheetName.substring(0, 29) + "-" + i;
                 }
-                allData.add(data);
-            } catch (IOException e) {
-                e.printStackTrace();
+                indexData.setSheet(sheetName);
+                data.add(indexData);
             }
+            allData.add(data);
         }
 
         ExcelWriter excelWriter;
